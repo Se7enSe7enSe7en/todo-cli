@@ -15,24 +15,30 @@ var CommandMap = map[string]string{
 
 const (
 	NUM_OF_COLUMNS = 5
-	FILE_NAME      = "todo.csv"
+	FILE_PATH      = "./todo.csv"
 )
 
 func OpenCsvFile() *os.File {
 	var csvFile *os.File
 
-	csvFile, err := os.Open(FILE_NAME)
-	if err != nil {
-		log.Fatal("Cannot open file")
-	}
+	csvFile, errOpen := os.Open(FILE_PATH)
+	if errOpen != nil {
+		// if file exists return file
+		if os.IsExist(errOpen) {
+			return csvFile
+		}
 
-	if os.IsExist(err) {
-		return csvFile
-	}
+		// if file does not exist, create file
+		if os.IsNotExist(errOpen) {
+			csvFile, errCreate := os.Create(FILE_PATH)
+			if errCreate != nil {
+				log.Fatal("Cannot create file", errCreate)
+			}
+			return csvFile
+		}
 
-	csvFile, err = os.Create(FILE_NAME)
-	if err != nil {
-		log.Fatal("Cannot create file")
+		// if it has an error not related to existence, terminate
+		log.Fatal("Cannot open file: ", errOpen)
 	}
 
 	return csvFile
@@ -46,9 +52,10 @@ func main() {
 	for i, arg := range args {
 		commandArg, ok := CommandMap[arg]
 		if ok {
-			fmt.Println("WE GOT A COMMAND: ", commandArg)
+			fmt.Println("COMMAND: ", commandArg) // TEST
 			command = commandArg
 			index = i
+			break
 		}
 	}
 
@@ -57,8 +64,8 @@ func main() {
 
 	switch command {
 	case "create":
-		todo := strings.Join(args[index:], " ")
-		fmt.Printf("todo: %v\n", todo)
+		createArg := strings.Join(args[index+1:], " ")
+		fmt.Printf("createArg: %v\n", createArg)
 
 		writer := csv.NewWriter(csvFile)
 		defer writer.Flush()

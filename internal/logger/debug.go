@@ -3,39 +3,15 @@
 package logger
 
 import (
-	"log/slog"
-	"os"
+	"fmt"
+	"log"
 )
 
-type debugLogger struct {
-	slog *slog.Logger
+func Debug(format string, args ...any) {
+	fmt.Printf("[DEBUG] "+format, args...)
+	fmt.Println()
 }
 
-/*
-Initializes logger with detailed output, config used:
-  - Level: slog.LevelDebug (-4) means the logger will show logs that are above -4 (since this is the lowest level, basically all of them)
-  - AddSource shows the line in the source code where the log is
-*/
-func newLogger() Logger {
-	return &debugLogger{
-		slog: slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-			Level: slog.LevelDebug,
-		})),
-	}
-}
-
-func (d *debugLogger) Debug(msg string, args ...any) {
-	d.slog.Debug(msg, args...)
-}
-
-func (d *debugLogger) Info(msg string, args ...any) {
-	d.slog.Info(msg, args...)
-}
-
-func (d *debugLogger) Error(msg string, args ...any) {
-	d.slog.Error(msg, args...)
-}
-
-func (d *debugLogger) Enabled() bool {
-	return true
+func Error(msg string, args ...any) {
+	log.Fatal("[ERROR] ", args)
 }

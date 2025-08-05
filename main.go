@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/csv"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"time"
@@ -45,7 +44,7 @@ func OpenCsvFile() *os.File {
 	// Try to open existing file
 	csvFile, err := os.OpenFile(FILE_PATH, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
-		log.Fatal("Cannot create file", err)
+		logger.Error("Cannot create file", err)
 	}
 	return csvFile
 }
@@ -91,18 +90,27 @@ func createTodo(todoList [][]string, description string) ([][]string, error) {
 	return todoList, nil
 }
 
-func main() {
-	logger.Initialize()
-	logger.Info("VIBE CHECKKKKKKKKKKKKKKKKKKKKKK")
+func listTodo(todoList [][]string) {
+	/*
+		TODO: make table in terminal
+		- [] make sure the it looks nice
+		- [] the width of the column automatically adjusts depending on the longest cell
+		- [] there should be a limit for the width column, and wrap the text when it gets
+		too long, when it is, add additional row (adjust vertically)
+	*/
+}
 
+func main() {
 	args := os.Args[1:]
+
+	logger.Debug("args: %v", args)
 
 	var command string
 	var index int
 	for i, arg := range args {
 		commandArg, ok := CommandMap[arg]
 		if ok {
-			fmt.Println("COMMAND: ", commandArg) // TEST
+			logger.Debug("command: %v", commandArg) // TEST
 			command = commandArg
 			index = i
 			break
@@ -116,7 +124,7 @@ func main() {
 	case "create":
 		// get the following arguments after the command
 		createArg := strings.Join(args[index+1:], " ")
-		fmt.Printf("createArg: %v\n", createArg)
+		logger.Debug("createArg: %v", createArg)
 
 		// init reader
 		reader := csv.NewReader(csvFile)
@@ -125,10 +133,10 @@ func main() {
 		// load todoList from the csv
 		todoList, err := reader.ReadAll()
 		if err != nil {
-			log.Fatal("cannot read the csv: ", err)
+			logger.Error("cannot read the csv: ", err)
 		}
 
-		// if we got empty, then initialize csv with the headers
+		// if we got empty, then append headers to the todoList
 		if len(todoList) == 0 {
 			headers := []string{"id", "description", "done", "created at", "priority"}
 			todoList = append(todoList, headers)
@@ -141,7 +149,7 @@ func main() {
 		// create todo
 		todoList, err = createTodo(todoList, createArg)
 		if err != nil {
-			log.Fatal("cannot create todo: ", err)
+			logger.Error("cannot create todo: ", err)
 		}
 
 		// Reset file position and clear existing content before writing
@@ -150,10 +158,37 @@ func main() {
 
 		// write back to csv
 		if err := writer.WriteAll(todoList); err != nil {
-			log.Fatal("cannot write to csv: ", err)
+			logger.Error("cannot write to csv: ", err)
 		}
 
 		fmt.Println("Todo created successfully!")
+
+	case "list":
+		// get the follow arguments after the command
+		listArg := strings.Join(args[index+1:], " ")
+		logger.Debug("listArg: %v", listArg)
+
+		// init reader
+		reader := csv.NewReader(csvFile)
+		reader.FieldsPerRecord = -1
+		logger.Debug("reader: %v", reader)
+
+		// load todoList from the csv
+		todoList, err := reader.ReadAll()
+		if err != nil {
+			logger.Error("cannot read the csv: ", err)
+		}
+		logger.Debug("todoList: %v", todoList)
+
+		// if we got empty, then append headers to the todoList
+		if len(todoList) == 0 {
+			headers := []string{"id", "description", "done", "created at", "priority"}
+			todoList = append(todoList, headers)
+		}
+
+		// display todo
+		listTodo(todoList)
+
 	}
 
 }

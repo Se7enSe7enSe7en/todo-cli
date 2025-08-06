@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Se7enSe7enSe7en/todo-cli/internal/logger"
+	"github.com/Se7enSe7enSe7en/todo-cli/internal/stringUtil"
 )
 
 var CommandMap = map[string]string{
@@ -90,14 +91,61 @@ func createTodo(todoList [][]string, description string) ([][]string, error) {
 	return todoList, nil
 }
 
-func listTodo(todoList [][]string) {
+func listTodo(todoListStr [][]string) {
 	/*
 		TODO: make table in terminal
-		- [] make sure the it looks nice
-		- [] the width of the column automatically adjusts depending on the longest cell
+		- [x] make sure the it looks nice
+		- [x] the width of the column automatically adjusts depending on the longest cell
 		- [] there should be a limit for the width column, and wrap the text when it gets
 		too long, when it is, add additional row (adjust vertically)
 	*/
+
+	// Init a 2d list for the formatted todo list
+	todoListStrWithPadding := make([][]string, len(todoListStr))
+	for i := range todoListStrWithPadding {
+		todoListStrWithPadding[i] = make([]string, len(todoListStr[i]))
+	}
+
+	// column traversal (down to right)
+	for x := 0; x < len(todoListStr); x++ {
+		maxColumnWidth := 0
+
+		strColumn := []string{}
+
+		for y := 0; y < len(todoListStr[x]); y++ {
+
+			cell := todoListStr[y][x]
+
+			// logger.Debug("todoListStr[%v][%v]: %v", y, x, cell)
+
+			strColumn = append(strColumn, cell)
+
+			if len(cell) > maxColumnWidth {
+				maxColumnWidth = len(cell)
+			}
+		}
+
+		// logger.Debug("maxColumnWidth for column %v: %v", x, maxColumnWidth)
+
+		for y, str := range strColumn {
+			todoListStrWithPadding[y][x] = stringUtil.AddBothSidesPadding(stringUtil.AddRightSidePadding(str, maxColumnWidth))
+		}
+
+	}
+
+	// logger.Debug("todoListStrWithPadding: %v", todoListStrWithPadding)
+
+	// Print each row with the pipes and padding
+	for i, row := range todoListStrWithPadding {
+		strRow := stringUtil.AddPipes(row)
+		fmt.Println(strRow)
+
+		// Add header separator after the first row
+		if i == 0 {
+			fmt.Println(stringUtil.HeaderSeparator(len(strRow)))
+		}
+	}
+
 }
 
 func main() {
@@ -110,7 +158,7 @@ func main() {
 	for i, arg := range args {
 		commandArg, ok := CommandMap[arg]
 		if ok {
-			logger.Debug("command: %v", commandArg) // TEST
+			logger.Debug("command: %v", commandArg)
 			command = commandArg
 			index = i
 			break
@@ -128,7 +176,7 @@ func main() {
 
 		// init reader
 		reader := csv.NewReader(csvFile)
-		reader.FieldsPerRecord = -1
+		reader.FieldsPerRecord = -1 // (?)
 
 		// load todoList from the csv
 		todoList, err := reader.ReadAll()
@@ -186,9 +234,6 @@ func main() {
 			todoList = append(todoList, headers)
 		}
 
-		// display todo
 		listTodo(todoList)
-
 	}
-
 }

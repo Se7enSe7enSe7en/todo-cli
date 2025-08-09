@@ -4,11 +4,13 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Se7enSe7enSe7en/todo-cli/internal/logger"
 	"github.com/Se7enSe7enSe7en/todo-cli/internal/stringUtil"
+	"github.com/Se7enSe7enSe7en/todo-cli/pkg/set"
 )
 
 var CommandMap = map[string]string{
@@ -50,8 +52,59 @@ func OpenCsvFile() *os.File {
 	return csvFile
 }
 
-func generateID() string {
-	return time.Now().Format("20060102150405")
+func generateID(todoListStr [][]string) string {
+	/*
+		TODO: Id generation should be simpler, since we will use the id for accessing the todo
+
+		algorithm # 1: find the lowest available number and use that for the id
+			- [x] put the ids in a set for (O(1) look up time)
+			- [x] create a loop starting from 1, iterate by 1, lookup the number
+			in your set
+			- [x] if it exists, then move to the next, if it doesn't, return the number
+	*/
+
+	const idIndex = 0
+	idSet := set.NewSet()
+
+	var maxId int = 0
+
+	for index, todo := range todoListStr {
+		if index == 0 {
+			// skip header row
+			continue
+		}
+
+		idStr := todo[idIndex]
+		logger.Debug("idStr: %v", idStr)
+
+		// add id to the set
+		idSet.Add(idStr)
+
+		// find the highest id number
+		idInt, err := strconv.Atoi(idStr)
+		if err != nil {
+			logger.Error("generateId() ParseInt error: ", err)
+			return ""
+		}
+		if idInt > maxId {
+			maxId = idInt
+		}
+	}
+
+	logger.Debug("idSet: %v", idSet.List())
+
+	// check all numbers from 1 to maxId (highest id number)
+	for num := 1; num < maxId; num++ {
+		numStr := strconv.Itoa(num)
+
+		// if the number is available, return the number as the id
+		if !idSet.Contains(numStr) {
+			return numStr
+		}
+	}
+
+	// if no available low number id is found, return the maxId + 1 as the id
+	return strconv.Itoa(maxId + 1)
 }
 
 // Convert Todo struct to string slice for CSV storage
@@ -74,7 +127,9 @@ func toStringSlice(todo Todo) []string {
 
 func createTodo(todoList [][]string, description string) ([][]string, error) {
 	// Generate a unique ID
-	id := generateID()
+	id := generateID(todoList)
+
+	logger.Debug("generated id: %v", id)
 
 	// Create new todo using the Todo struct
 	newTodo := Todo{
@@ -87,6 +142,8 @@ func createTodo(todoList [][]string, description string) ([][]string, error) {
 
 	// Convert Todo struct to string slice and add to todoList
 	todoList = append(todoList, toStringSlice(newTodo))
+
+	logger.Debug("todoList: %v", todoList)
 
 	return todoList, nil
 }
@@ -114,7 +171,7 @@ func listTodo(todoListStr [][]string) {
 
 		for y := 0; y < len(todoListStr[x]); y++ {
 
-			cell := todoListStr[y][x]
+			cell := todoListStr[y][x] // TOFIX: index out of range
 
 			// logger.Debug("todoListStr[%v][%v]: %v", y, x, cell)
 
@@ -209,7 +266,7 @@ func main() {
 			logger.Error("cannot write to csv: ", err)
 		}
 
-		fmt.Println("Todo created successfully!")
+		fmt.Println("todo created")
 
 	case "list":
 		// get the follow arguments after the command

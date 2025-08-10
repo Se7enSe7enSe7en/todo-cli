@@ -156,22 +156,25 @@ func listTodo(todoListStr [][]string) {
 		- [] there should be a limit for the width column, and wrap the text when it gets
 		too long, when it is, add additional row (adjust vertically)
 	*/
+	// Get the dimensions of the todoList
+	numOfRows := len(todoListStr)
+	numOfColumns := len(todoListStr[0]) // it is guranteed that all rows have the same amount of columns
 
 	// Init a 2d list for the formatted todo list
-	todoListStrWithPadding := make([][]string, len(todoListStr))
+	todoListStrWithPadding := make([][]string, numOfRows)
 	for i := range todoListStrWithPadding {
-		todoListStrWithPadding[i] = make([]string, len(todoListStr[i]))
+		todoListStrWithPadding[i] = make([]string, numOfColumns)
 	}
 
 	// column traversal (down to right)
-	for x := 0; x < len(todoListStr); x++ {
+	for col := 0; col < numOfColumns; col++ {
 		maxColumnWidth := 0
 
 		strColumn := []string{}
 
-		for y := 0; y < len(todoListStr[x]); y++ {
+		for row := 0; row < numOfRows; row++ {
 
-			cell := todoListStr[y][x] // TOFIX: index out of range
+			cell := todoListStr[row][col]
 
 			// logger.Debug("todoListStr[%v][%v]: %v", y, x, cell)
 
@@ -184,8 +187,8 @@ func listTodo(todoListStr [][]string) {
 
 		// logger.Debug("maxColumnWidth for column %v: %v", x, maxColumnWidth)
 
-		for y, str := range strColumn {
-			todoListStrWithPadding[y][x] = stringUtil.AddBothSidesPadding(stringUtil.AddRightSidePadding(str, maxColumnWidth))
+		for row, str := range strColumn {
+			todoListStrWithPadding[row][col] = stringUtil.AddBothSidesPadding(stringUtil.AddRightSidePadding(str, maxColumnWidth))
 		}
 
 	}

@@ -9,13 +9,19 @@ import (
 	"time"
 
 	"github.com/Se7enSe7enSe7en/todo-cli/internal/logger"
-	"github.com/Se7enSe7enSe7en/todo-cli/internal/stringUtil"
+	"github.com/Se7enSe7enSe7en/todo-cli/internal/tables"
 	"github.com/Se7enSe7enSe7en/todo-cli/pkg/set"
 )
 
-var CommandMap = map[string]string{
-	"create": "create",
-	"list":   "list",
+func getCommandMap() map[string]string {
+	return map[string]string{
+		"create": "create",
+		"list":   "list",
+	}
+}
+
+func getHeaders() []string {
+	return []string{"id", "description", "done", "created at", "priority"}
 }
 
 const (
@@ -188,7 +194,7 @@ func listTodo(todoListStr [][]string) {
 		// logger.Debug("maxColumnWidth for column %v: %v", x, maxColumnWidth)
 
 		for row, str := range strColumn {
-			todoListStrWithPadding[row][col] = stringUtil.AddBothSidesPadding(stringUtil.AddRightSidePadding(str, maxColumnWidth))
+			todoListStrWithPadding[row][col] = tables.AddBothSidesPadding(tables.AddRightSidePadding(str, maxColumnWidth))
 		}
 
 	}
@@ -197,12 +203,12 @@ func listTodo(todoListStr [][]string) {
 
 	// Print each row with the pipes and padding
 	for i, row := range todoListStrWithPadding {
-		strRow := stringUtil.AddPipes(row)
+		strRow := tables.AddPipes(row)
 		fmt.Println(strRow)
 
 		// Add header separator after the first row
 		if i == 0 {
-			fmt.Println(stringUtil.HeaderSeparator(len(strRow)))
+			fmt.Println(tables.HeaderSeparator(len(strRow)))
 		}
 	}
 
@@ -216,7 +222,7 @@ func main() {
 	var command string
 	var index int
 	for i, arg := range args {
-		commandArg, ok := CommandMap[arg]
+		commandArg, ok := getCommandMap()[arg]
 		if ok {
 			logger.Debug("command: %v", commandArg)
 			command = commandArg
@@ -236,7 +242,7 @@ func main() {
 
 		// init reader
 		reader := csv.NewReader(csvFile)
-		reader.FieldsPerRecord = -1 // (?)
+		reader.FieldsPerRecord = len(getHeaders())
 
 		// load todoList from the csv
 		todoList, err := reader.ReadAll()
@@ -246,7 +252,7 @@ func main() {
 
 		// if we got empty, then append headers to the todoList
 		if len(todoList) == 0 {
-			headers := []string{"id", "description", "done", "created at", "priority"}
+			headers := getHeaders()
 			todoList = append(todoList, headers)
 		}
 
@@ -278,7 +284,7 @@ func main() {
 
 		// init reader
 		reader := csv.NewReader(csvFile)
-		reader.FieldsPerRecord = -1
+		reader.FieldsPerRecord = len(getHeaders())
 		logger.Debug("reader: %v", reader)
 
 		// load todoList from the csv
@@ -290,7 +296,7 @@ func main() {
 
 		// if we got empty, then append headers to the todoList
 		if len(todoList) == 0 {
-			headers := []string{"id", "description", "done", "created at", "priority"}
+			headers := getHeaders()
 			todoList = append(todoList, headers)
 		}
 

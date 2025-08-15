@@ -22,12 +22,14 @@ todo --priority=high create "feed dog"
 todo list
 ```
 
+```
 | id | description            | done | created at       | priority |
 ---------------------------------------------------------------------
 | 4  | renew driver's license | no   | 2024-11-28 20:01 | Medium   |
 | 3  | ask about task QHA-968 | no   | 2024-11-28 17:38 | Medium   |
 | 2  | work on todo-cli       | no   | 2024-11-27 15:32 | Low      |
 | 1  | feed dog               | yes  | 2024-11-27 06:41 | High     |
+```
 
 ### notes
 - default sorting order is (done = ASC) > (priority = DESC) > (created_at = DESC)

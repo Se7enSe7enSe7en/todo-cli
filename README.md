@@ -48,3 +48,5 @@ todo list --sort=ASC --not-done
 ```bash
 todo done 1
 ```
+- done todos are not deleted immediately, be default they are just archived
+- archived todos are deleted when accessing the list (using any command, "create", "list", etc.) and they are a week old

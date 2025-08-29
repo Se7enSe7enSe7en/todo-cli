@@ -45,10 +45,6 @@ type Todo struct {
 	priority    Priority
 }
 
-type TodoList interface {
-	add()
-}
-
 func OpenCsvFile() *os.File {
 	// Try to open existing file
 	csvFile, err := os.OpenFile(FILE_PATH, os.O_RDWR|os.O_CREATE, 0644)
@@ -182,8 +178,6 @@ func listTodo(todoListStr [][]string) {
 
 			cell := todoListStr[row][col]
 
-			// logger.Debug("todoListStr[%v][%v]: %v", y, x, cell)
-
 			strColumn = append(strColumn, cell)
 
 			if len(cell) > maxColumnWidth {
@@ -191,15 +185,11 @@ func listTodo(todoListStr [][]string) {
 			}
 		}
 
-		// logger.Debug("maxColumnWidth for column %v: %v", x, maxColumnWidth)
-
 		for row, str := range strColumn {
 			todoListStrWithPadding[row][col] = tables.AddBothSidesPadding(tables.AddRightSidePadding(str, maxColumnWidth))
 		}
 
 	}
-
-	// logger.Debug("todoListStrWithPadding: %v", todoListStrWithPadding)
 
 	// Print each row with the pipes and padding
 	for i, row := range todoListStrWithPadding {
@@ -212,6 +202,15 @@ func listTodo(todoListStr [][]string) {
 		}
 	}
 
+}
+
+func updateTodoDone(todoListStr [][]string, id string) {
+	/*
+		TODO: set the Todo to "Done"
+		- [] convert the list of string todos into a list of todo struct (Todo)
+		- [] using the id, update the list of todos, set the todo to "done"
+		- [] implement delete "done" todos in list if they are a week old
+	*/
 }
 
 func main() {
@@ -234,10 +233,12 @@ func main() {
 	csvFile := OpenCsvFile()
 	defer csvFile.Close()
 
+	// get the following arguments after the command
+	argsAfterCommand := strings.Join(args[index+1:], " ")
+
 	switch command {
 	case "create":
-		// get the following arguments after the command
-		createArg := strings.Join(args[index+1:], " ")
+		createArg := argsAfterCommand
 		logger.Debug("createArg: %v", createArg)
 
 		// init reader
@@ -278,14 +279,12 @@ func main() {
 		fmt.Println("todo created")
 
 	case "list":
-		// get the follow arguments after the command
-		listArg := strings.Join(args[index+1:], " ")
+		listArg := argsAfterCommand
 		logger.Debug("listArg: %v", listArg)
 
 		// init reader
 		reader := csv.NewReader(csvFile)
 		reader.FieldsPerRecord = len(getHeaders())
-		logger.Debug("reader: %v", reader)
 
 		// load todoList from the csv
 		todoList, err := reader.ReadAll()
@@ -301,5 +300,26 @@ func main() {
 		}
 
 		listTodo(todoList)
+
+	case "done":
+		doneArg := argsAfterCommand
+
+		// init reader
+		reader := csv.NewReader(csvFile)
+		reader.FieldsPerRecord = len(getHeaders())
+
+		// load todoList from the csv
+		todoList, err := reader.ReadAll()
+		if err != nil {
+			logger.Error("cannot read the csv: ", err)
+		}
+
+		// if we got empty, then exit
+		if len(todoList) == 0 {
+			fmt.Println("Todo list is empty")
+			return
+		}
+
+		updateTodoDone(todoList)
 	}
 }
